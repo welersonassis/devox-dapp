@@ -8,6 +8,7 @@ contract Devox {
     error Devox__AddressAlreadyVoted();
     error Devox__PollNameCanNotBeEmpty();
     error Devox__MustHaveAtLeastTwoOptions();
+    error Devox__InvalidOptionId();
 
     struct VoterStatus {
         bool hasVoted;
@@ -75,7 +76,6 @@ contract Devox {
         );
 
         emit PollCreated(_name, msg.sender, pollId);
-        console.log("PollCreated: %s ", _name);
         return pollId;
     }
 
@@ -84,7 +84,9 @@ contract Devox {
             revert Devox__AddressAlreadyVoted();
         }
         Poll storage poll = s_polls[_pollId];
-        require(_optionId < poll.options.length, "Invalid option ID");
+        if (_optionId >= poll.options.length) {
+            revert Devox__InvalidOptionId();
+        }
 
         s_voters[_pollId][msg.sender] = VoterStatus(true, _optionId);
         poll.options[_optionId].voteCount++;

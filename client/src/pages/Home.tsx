@@ -51,12 +51,6 @@ const PollCreator: React.FC = () => {
       return;
     }
 
-    console.log("Creating Poll:", {
-      name: pollName,
-      options: validOptions,
-      creatorAddress: address,
-    });
-
     writeContract({
       abi: contractAbi,
       address: contractAddress,

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useAccount, useReadContract } from "wagmi";
+import { useAccount, useReadContract, useWriteContract } from "wagmi";
 import { contractAddress, contractAbi } from "../utils/contract";
 
 interface PollOption {
@@ -16,7 +16,6 @@ interface Poll {
   maxCount: bigint;
   maxTime: bigint;
   name: string;
-  creatorAddress: string;
   options: PollOption[];
   totalVotesCast: bigint;
   voteCount: bigint;
@@ -25,12 +24,14 @@ interface Poll {
 const Polls: React.FC = () => {
   const { isConnected } = useAccount();
   // State to keep track of which poll card is expanded
-  const [expandedPollId, setExpandedPollId] = useState<string | null>(null);
+  const [expandedPollId, setExpandedPollId] = useState<bigint | null>(null);
   // State to keep track of the selected option for voting
   const [selectedOption, setSelectedOption] = useState<{
-    pollId: string;
-    optionId: string;
+    pollId: bigint;
+    optionId: bigint;
   } | null>(null);
+
+  const { writeContract } = useWriteContract();
 
   const {
     data: polls,
@@ -46,13 +47,13 @@ const Polls: React.FC = () => {
   const Polls: Poll[] = (polls || []) as Poll[];
 
   // Function to toggle the expanded state of a poll card
-  const toggleExpand = (pollId: string) => {
+  const toggleExpand = (pollId: bigint) => {
     setExpandedPollId(expandedPollId === pollId ? null : pollId);
-    setSelectedOption(null); // Reset selected option when expanding/collapsing
+    setSelectedOption(null);
   };
 
   // Function to handle voting (placeholder)
-  const handleVote = (pollId: string, optionId: string) => {
+  const handleVote = (pollId: bigint, optionId: bigint) => {
     if (!isConnected) {
       alert("Please connect your MetaMask wallet to vote.");
       return;
@@ -71,6 +72,12 @@ const Polls: React.FC = () => {
     );
     // In a real DApp, you would send a transaction to a smart contract here.
     // After voting, you might want to collapse the card or show a confirmation.
+    writeContract({
+      abi: contractAbi,
+      address: contractAddress,
+      functionName: "vote",
+      args: [pollId, optionId],
+    });
     setExpandedPollId(null); // Collapse the card after voting
     setSelectedOption(null); // Clear selected option
   };
@@ -113,14 +120,14 @@ const Polls: React.FC = () => {
                 <div
                   key={poll.id}
                   className="bg-gray-50 p-6 rounded-lg shadow-md border border-gray-200 cursor-pointer transition-all duration-300 ease-in-out hover:shadow-lg"
-                  onClick={() => toggleExpand(poll.id.toString())}
+                  onClick={() => toggleExpand(poll.id)}
                 >
                   <div className="flex justify-between items-center">
                     <h2 className="text-xl font-semibold text-gray-800">
                       {poll.name}
                     </h2>
                     <span className="text-gray-500 text-sm">
-                      {expandedPollId === poll.id.toString() ? (
+                      {expandedPollId === poll.id ? (
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           className="h-6 w-6 transform rotate-180"
@@ -154,13 +161,13 @@ const Polls: React.FC = () => {
                     </span>
                   </div>
 
-                  {expandedPollId === poll.id.toString() && (
+                  {expandedPollId === poll.id && (
                     <div className="mt-4 pt-4 border-t border-gray-200">
                       <p className="text-gray-600 text-sm mb-3">
                         Created by:{" "}
                         <span className="font-mono">
-                          {poll.creatorAddress.slice(0, 6)}...
-                          {poll.creatorAddress.slice(-4)}
+                          {poll.creator.slice(0, 6)}...
+                          {poll.creator.slice(-4)}
                         </span>
                       </p>
                       <h3 className="text-lg font-medium text-gray-700 mb-3">
@@ -169,22 +176,21 @@ const Polls: React.FC = () => {
                       <div className="space-y-2">
                         {poll.options.map((option) => (
                           <label
-                            key={option.id.toString()}
+                            key={option.id}
                             className="flex items-center p-3 rounded-lg border border-gray-300 hover:bg-blue-50 transition duration-200 cursor-pointer"
                           >
                             <input
                               type="radio"
                               name={`vote-poll-${poll.id}`}
-                              value={option.id.toString()}
+                              value={option.id}
                               checked={
-                                selectedOption?.pollId === poll.id.toString() &&
-                                selectedOption?.optionId ===
-                                  option.id.toString()
+                                selectedOption?.pollId === poll.id &&
+                                selectedOption?.optionId === option.id
                               }
                               onChange={() =>
                                 setSelectedOption({
-                                  pollId: poll.id.toString(),
-                                  optionId: option.id.toString(),
+                                  pollId: poll.id,
+                                  optionId: option.id,
                                 })
                               }
                               className="form-radio h-5 w-5 text-blue-600 mr-3"
@@ -204,12 +210,9 @@ const Polls: React.FC = () => {
                           e.stopPropagation(); // Prevent card collapse when clicking vote button
                           if (
                             selectedOption &&
-                            selectedOption.pollId === poll.id.toString()
+                            selectedOption.pollId === poll.id
                           ) {
-                            handleVote(
-                              poll.id.toString(),
-                              selectedOption.optionId
-                            );
+                            handleVote(poll.id, selectedOption.optionId);
                           } else {
                             alert("Please select an option before voting.");
                           }
@@ -217,13 +220,13 @@ const Polls: React.FC = () => {
                         disabled={
                           !isConnected ||
                           !selectedOption ||
-                          selectedOption.pollId !== poll.id.toString()
+                          selectedOption.pollId !== poll.id
                         }
                         className={`w-full font-bold py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-50 transition duration-300 ease-in-out shadow-md mt-4
                         ${
                           isConnected &&
                           selectedOption &&
-                          selectedOption.pollId === poll.id.toString()
+                          selectedOption.pollId === poll.id
                             ? "bg-purple-600 hover:bg-purple-700 text-white focus:ring-purple-500"
                             : "bg-gray-400 text-gray-200 cursor-not-allowed"
                         }`}

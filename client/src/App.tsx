@@ -1,8 +1,8 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom"; // Real import
+import { Routes, Route } from "react-router-dom";
 import { WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { config } from "../config"; // Make sure your Wagmi config is correctly imported
+import { config } from "../config";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import About from "./pages/About";
