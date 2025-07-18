@@ -1,19 +1,14 @@
 import React, { useState } from "react";
-import { WagmiProvider, useConnect, useAccount, useWriteContract } from "wagmi";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { config } from "../../config";
+import { useAccount, useWriteContract } from "wagmi";
 import { contractAddress, contractAbi } from "../utils/contract";
 
-// Create a query client for Wagmi's internal use
-const queryClient = new QueryClient();
-
-// Main PollCreator component
-const PollCreator: React.FC = () => {
-  const { connect, connectors } = useConnect();
-  const { address, isConnected, isDisconnected } = useAccount();
+const Home: React.FC = () => {
+  const { isConnected } = useAccount();
 
   const [pollName, setPollName] = useState<string>("");
-  const [options, setOptions] = useState<string[]>(["", ""]); // Start with two empty options
+  const [options, setOptions] = useState<string[]>(["", ""]);
+  const [maxVotes, setMaxVotes] = useState<string>("");
+  const [pollTime, setPollTime] = useState<string>("");
 
   const { writeContract } = useWriteContract();
 
@@ -35,154 +30,179 @@ const PollCreator: React.FC = () => {
     setOptions(newOptions);
   };
 
-  // Function to handle poll creation (placeholder for now)
+  // Function to handle poll creation (updated validation)
   const handleCreatePoll = () => {
     if (!isConnected) {
-      alert("Please connect to MetaMask first."); // Using alert for simplicity, consider a custom modal in a real app
+      alert("Please connect your wallet first.");
       return;
     }
     if (!pollName.trim()) {
-      alert("Please enter a poll name.");
+      alert("Please enter a poll title.");
       return;
     }
     const validOptions = options.filter((option) => option.trim() !== "");
     if (validOptions.length < 2) {
-      alert("Please provide at least two valid voting options.");
+      alert("Please provide at least two choices.");
       return;
     }
+    if (!maxVotes && !pollTime) {
+      alert("Please set a maximum number of votes or a poll duration.");
+      return;
+    }
+
+    // Parse values, fallback to 0n if not set
+    const maxVotesValue = maxVotes ? BigInt(maxVotes) : 0n;
+    const pollTimeValue = pollTime ? BigInt(pollTime) : 0n;
 
     writeContract({
       abi: contractAbi,
       address: contractAddress,
       functionName: "createPoll",
-      args: [pollName, options, 10n, 0n],
+      args: [pollName, options, maxVotesValue, pollTimeValue],
     });
     setPollName("");
     setOptions(["", ""]);
+    setMaxVotes("");
+    setPollTime("");
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4 font-sans">
-      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">
-          Create Your Poll
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-white to-gray-200 flex items-center justify-center font-sans">
+      <div className="bg-white/80 backdrop-blur-lg p-10 rounded-3xl shadow-2xl w-full max-w-4xl border border-gray-200 mt-2">
+        <h1 className="text-4xl font-extrabold text-gray-900 mb-2 text-center tracking-tight">
+          Launch a New Poll
         </h1>
-
-        {/* MetaMask Connection Section */}
-        <div className="mb-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <h2 className="text-xl font-semibold text-blue-700 mb-3">
-            MetaMask Connection
-          </h2>
-          {isConnected ? (
-            <div className="text-green-600 font-medium">
-              Connected:{" "}
-              <span className="font-mono text-sm">
-                {address?.slice(0, 6)}...{address?.slice(-4)}
-              </span>
+        <p className="text-lg text-gray-500 mb-10 text-center">
+          Gather opinions with style. Set your poll’s details and invite the
+          world to vote.
+        </p>
+        <form
+          className="flex flex-col gap-10"
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleCreatePoll();
+          }}
+        >
+          <div className="flex flex-wrap gap-8 items-end justify-between">
+            {/* Poll Title */}
+            <div className="flex flex-col flex-1 min-w-[220px]">
+              <label
+                htmlFor="pollName"
+                className="block text-gray-700 text-base font-semibold mb-2"
+              >
+                Poll Title
+              </label>
+              <input
+                type="text"
+                id="pollName"
+                value={pollName}
+                onChange={(e) => setPollName(e.target.value)}
+                className="bg-gray-50 border border-gray-200 rounded-xl py-3 px-5 text-gray-900 text-lg focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition duration-200 shadow-sm"
+                placeholder="e.g., What's the best JS framework?"
+              />
             </div>
-          ) : (
-            <button
-              onClick={() => connect({ connector: connectors[0] })} // Connect using the first available connector (injected)
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-300 ease-in-out shadow-md"
-            >
-              Connect MetaMask
-            </button>
-          )}
-          {isDisconnected && (
-            <p className="text-red-500 text-sm mt-2 text-center">
-              Wallet disconnected. Please connect.
-            </p>
-          )}
-        </div>
-
-        {/* Poll Creation Form */}
-        <div className="space-y-6">
-          <div>
-            <label
-              htmlFor="pollName"
-              className="block text-gray-700 text-sm font-bold mb-2"
-            >
-              Poll Name:
-            </label>
-            <input
-              type="text"
-              id="pollName"
-              value={pollName}
-              onChange={(e) => setPollName(e.target.value)}
-              className="shadow-sm appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-              placeholder="e.g., Best Programming Language"
-            />
+            {/* Max Votes */}
+            <div className="flex flex-col w-48">
+              <label
+                htmlFor="maxVotes"
+                className="block text-gray-700 text-base font-semibold mb-2"
+              >
+                Max Votes Allowed
+              </label>
+              <input
+                type="number"
+                id="maxVotes"
+                min="1"
+                value={maxVotes}
+                onChange={(e) => setMaxVotes(e.target.value)}
+                className="bg-gray-50 border border-gray-200 rounded-xl py-3 px-5 text-gray-900 text-lg focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition duration-200 shadow-sm"
+                placeholder="e.g., 100"
+              />
+            </div>
+            {/* Poll Duration */}
+            <div className="flex flex-col w-56">
+              <label
+                htmlFor="pollTime"
+                className="block text-gray-700 text-base font-semibold mb-2"
+              >
+                Poll Duration (seconds)
+              </label>
+              <input
+                type="number"
+                id="pollTime"
+                min="1"
+                value={pollTime}
+                onChange={(e) => setPollTime(e.target.value)}
+                className="bg-gray-50 border border-gray-200 rounded-xl py-3 px-5 text-gray-900 text-lg focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition duration-200 shadow-sm"
+                placeholder="e.g., 3600"
+              />
+            </div>
           </div>
-
+          {/* Voting Choices */}
           <div>
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              Voting Options:
+            <label className="block text-gray-700 text-base font-semibold mb-4">
+              Choices
             </label>
-            {options.map((option, index) => (
-              <div key={index} className="flex items-center mb-3">
-                <input
-                  type="text"
-                  value={option}
-                  onChange={(e) => handleOptionChange(index, e.target.value)}
-                  className="shadow-sm appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 mr-2"
-                  placeholder={`Option ${index + 1}`}
-                />
-                {options.length > 1 && ( // Allow removing if more than one option
-                  <button
-                    onClick={() => removeOption(index)}
-                    className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-50 transition duration-300 ease-in-out shadow-sm flex-shrink-0"
-                    title="Remove option"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
+            <div className="flex flex-wrap gap-4">
+              {options.map((option, index) => (
+                <div key={index} className="flex items-center mb-2">
+                  <input
+                    type="text"
+                    value={option}
+                    onChange={(e) => handleOptionChange(index, e.target.value)}
+                    className="bg-gray-50 border border-gray-200 rounded-xl py-3 px-5 text-gray-900 text-lg focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition duration-200 shadow-sm mr-2"
+                    placeholder={`Choice ${index + 1}`}
+                  />
+                  {options.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeOption(index)}
+                      className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-50 transition duration-300 ease-in-out shadow-sm flex-shrink-0"
+                      title="Remove choice"
                     >
-                      <path
-                        fillRule="evenodd"
-                        d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 012 0v6a1 1 0 11-2 0V8z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </button>
-                )}
-              </div>
-            ))}
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 012 0v6a1 1 0 11-2 0V8z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addOption}
+                className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-bold py-2 px-6 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-opacity-50 transition duration-300 ease-in-out shadow-md mt-2"
+              >
+                + Add Choice
+              </button>
+            </div>
+          </div>
+          {/* Submit Button */}
+          <div>
             <button
-              onClick={addOption}
-              className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-50 transition duration-300 ease-in-out shadow-md mt-2"
+              type="submit"
+              disabled={!isConnected}
+              className={`w-full font-bold py-4 px-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-opacity-50 transition duration-300 ease-in-out shadow-lg text-lg tracking-wide
+                ${
+                  isConnected
+                    ? "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white focus:ring-purple-500"
+                    : "bg-gray-300 text-gray-400 cursor-not-allowed"
+                }`}
             >
-              Add Option
+              Launch Poll
             </button>
           </div>
-
-          <button
-            onClick={handleCreatePoll}
-            disabled={!isConnected} // Disable if not connected to MetaMask
-            className={`w-full font-bold py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-50 transition duration-300 ease-in-out shadow-md
-              ${
-                isConnected
-                  ? "bg-purple-600 hover:bg-purple-700 text-white focus:ring-purple-500"
-                  : "bg-gray-400 text-gray-200 cursor-not-allowed"
-              }`}
-          >
-            Create Poll
-          </button>
-        </div>
+        </form>
       </div>
     </div>
-  );
-};
-
-// Home component to wrap PollCreator with WagmiProvider and QueryClientProvider
-const Home: React.FC = () => {
-  return (
-    <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
-        <PollCreator />
-      </QueryClientProvider>
-    </WagmiProvider>
   );
 };
 

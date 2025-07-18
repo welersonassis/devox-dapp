@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { config } from "../config";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
-import About from "./pages/About";
 import Polls from "./pages/Polls";
 import "./App.css";
 
@@ -20,7 +19,6 @@ const App: React.FC = () => {
           <main className="pt-16">
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/about" element={<About />} />
               <Route path="/polls" element={<Polls />} />
               <Route path="*" element={<div>404 Not Found</div>} />
             </Routes>
