@@ -1,0 +1,25 @@
+name: Contract Test
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.15"
+
+      # Install dependencies
+      - name: Install dependencies
+        working-directory: ./contract
+        run: npm ci
+
+      # Run Contract tests
+      - name: Run Contract tests
+        working-directory: ./contract
+        run: npx hardhat test
