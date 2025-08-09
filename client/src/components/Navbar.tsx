@@ -5,7 +5,8 @@ import {
 } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Link, useLocation } from "react-router-dom";
-import { useConnect, useAccount } from "wagmi";
+// import { useConnect, useAccount } from "wagmi";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -19,8 +20,8 @@ export default function Example() {
   ];
 
   // Wagmi wallet connection logic
-  const { connect, connectors } = useConnect();
-  const { address, isConnected } = useAccount();
+  // const { connect, connectors } = useConnect();
+  // const { address, isConnected } = useAccount();
 
   return (
     <Disclosure as="nav" className="bg-white rounded-xl shadow">
@@ -71,7 +72,7 @@ export default function Example() {
           </div>
           <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
             {/* Connect Wallet Button */}
-            {isConnected ? (
+            {/* {isConnected ? (
               <span className="text-green-600 font-mono px-4 py-2 rounded bg-black">
                 {address?.slice(0, 6)}...{address?.slice(-4)}
               </span>
@@ -83,7 +84,8 @@ export default function Example() {
               >
                 Connect Wallet
               </button>
-            )}
+            )} */}
+            <ConnectButton />
           </div>
         </div>
       </div>

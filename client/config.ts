@@ -1,9 +1,9 @@
-import { http, createConfig } from 'wagmi'
-import { hardhat } from 'wagmi/chains'
+import { createConfig, http } from 'wagmi'
+import { sepolia } from 'wagmi/chains'
 
 export const config = createConfig({
-  chains: [hardhat],
+  chains: [sepolia],
   transports: {
-    [hardhat.id]: http("http://127.0.0.1:8545/"),
+    [sepolia.id]: http(`https://eth-sepolia.g.alchemy.com/v2/${import.meta.env.VITE_ALCHEMY_API_KEY}`),
   },
 })

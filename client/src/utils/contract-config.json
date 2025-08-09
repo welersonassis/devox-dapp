@@ -1,9 +1,14 @@
 {
-  "address": "0x5fbdb2315678afecb367f032d93f642f64180aa3",
+  "address": "0x3b63d4a4774880b097E59ED0A36a0349d8c34d68",
   "abi": [
     {
       "inputs": [],
       "name": "Devox__AddressAlreadyVoted",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "Devox__DurationThresholdReach",
       "type": "error"
     },
     {
@@ -18,7 +23,17 @@
     },
     {
       "inputs": [],
+      "name": "Devox__PollIsNotActive",
+      "type": "error"
+    },
+    {
+      "inputs": [],
       "name": "Devox__PollNameCanNotBeEmpty",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "Devox__VotesLimitReach",
       "type": "error"
     },
     {
@@ -47,6 +62,31 @@
       "type": "event"
     },
     {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "pollId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "optionIndex",
+          "type": "uint256"
+        }
+      ],
+      "name": "VoteCast",
+      "type": "event"
+    },
+    {
       "inputs": [
         {
           "internalType": "string",
@@ -60,12 +100,12 @@
         },
         {
           "internalType": "uint256",
-          "name": "_maxCount",
+          "name": "_numMaxVotes",
           "type": "uint256"
         },
         {
           "internalType": "uint256",
-          "name": "_maxTime",
+          "name": "_maxDuration",
           "type": "uint256"
         }
       ],
@@ -103,12 +143,12 @@
             },
             {
               "internalType": "uint256",
-              "name": "maxCount",
+              "name": "numMaxVotes",
               "type": "uint256"
             },
             {
               "internalType": "uint256",
-              "name": "maxTime",
+              "name": "maxDuration",
               "type": "uint256"
             },
             {
@@ -147,6 +187,11 @@
               "internalType": "uint256",
               "name": "totalVotesCast",
               "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "createdAt",
+              "type": "uint256"
             }
           ],
           "internalType": "struct Devox.Poll[]",
@@ -184,12 +229,12 @@
         },
         {
           "internalType": "uint256",
-          "name": "maxCount",
+          "name": "numMaxVotes",
           "type": "uint256"
         },
         {
           "internalType": "uint256",
-          "name": "maxTime",
+          "name": "maxDuration",
           "type": "uint256"
         },
         {
@@ -205,6 +250,11 @@
         {
           "internalType": "uint256",
           "name": "totalVotesCast",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "createdAt",
           "type": "uint256"
         }
       ],
